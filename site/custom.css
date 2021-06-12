@@ -43,3 +43,8 @@ tr:first-child td, td:first-child {
 footer {
     font-size: 80%;
 }
+
+.dis{
+    opacity: 0.5;
+    pointer-events: none;
+}
