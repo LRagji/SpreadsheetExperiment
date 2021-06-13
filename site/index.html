@@ -17,7 +17,36 @@
 
 <body>
     <table></table>
-    <button type="button" onclick="newRowClickHandler()" class="btn btn-secondary">Add New Row</button>
+    <br>
+    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom"
+        aria-controls="offcanvasBottom">Console</button>
+
+    <div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasBottom" aria-labelledby="offcanvasBottomLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasBottomLabel">Console</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body small">
+            <div class="row">
+                <div class="col-11">
+                    <div class="form-floating">
+                        <textarea class="form-control" placeholder="Paste Contents to load into grid" id="txtDB"
+                            style="height: 100px"></textarea>
+                        <label for="txtDB">Database Contents</label>
+                    </div>
+                </div>
+                <div class="d-grid gap-2 col">
+                    <button type="button" onclick="newRowClickHandler()" class="btn btn-secondary btn-sm">New Row</button>
+                    <button type="button" onclick="save()" class="btn btn-secondary btn-sm">Save</button>
+                    <button type="button" onclick="load()" class="btn btn-secondary btn-sm">Load</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
     <!-- Applications Js -->
     <script src="column-def.js"></script>
     <script src="app.js"></script>

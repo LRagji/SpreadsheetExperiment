@@ -5,7 +5,6 @@ function generateHeaderCell(columnDefinition) {
 
 function generateDataCell(columnDefinition, columnIndex) {
     let cell = this.insertCell(-1);
-    let elementId = `e_${this.rowIndex}_${columnIndex}`;
     switch (columnDefinition.type) {
         case "serial":
             cell.innerHTML = this.rowIndex;
@@ -13,24 +12,25 @@ function generateDataCell(columnDefinition, columnIndex) {
         case "text":
             let input = document.createElement("input");
             input.type = "text";
-            input.id = elementId;
+            input.id = generateElementId("T", this.rowIndex, columnIndex);
             input.onblur = () => { window.appVariables.set(input.id, input.value); window.formulaes.map(f => f()); };
             cell.appendChild(input);
+            window.columnToDefMap.set(columnDefinition.name, { type: 'T', index: columnIndex });
             break;
         case "formulae":
             let label = document.createElement("Label");
-            label.id = elementId;
+            label.id = generateElementId("F", this.rowIndex, columnIndex);
             let jsFunc = () => compute(label.id, columnDefinition.formulae, window.appVariables, this.rowIndex, window.formulaesMap);
             let priority = (this.rowIndex * 100) + columnDefinition.priority
             window.formulaes.splice((priority || 0), 0, jsFunc);
             appVariables.set(label.id, () => document.getElementById(label.id).innerText);
             cell.appendChild(label);
+            window.columnToDefMap.set(columnDefinition.name, { type: 'F', index: columnIndex });
             break;
         default:
             cell.innerHTML = `${columnDefinition.type}`
             break;
     }
-    window.columnToIndexMap.set(columnDefinition.name, columnIndex);
 }
 
 function newRowClickHandler() {
@@ -43,7 +43,8 @@ function compute(labelId, formulae, variables, rowIndex) {
     try {
         //This is line is just to make the eval context with the required variables
         const getV = (columnName) => {
-            const variableName = `e_${rowIndex}_${window.columnToIndexMap.get(columnName)}`;
+            const columnDef = window.columnToDefMap.get(columnName);
+            const variableName = generateElementId(columnDef.type, rowIndex, columnDef.index);
             let value = variables.get(variableName);
             if (typeof (value) === 'function') {
                 value = value();
@@ -62,10 +63,62 @@ function compute(labelId, formulae, variables, rowIndex) {
     }
 }
 
-window.appVariables = new Map();
-window.formulaes = [];
-window.columnToIndexMap = new Map();
-let headerRow = document.querySelector("table").insertRow(-1);
-columns.forEach(generateHeaderCell.bind(headerRow));
+function save() {
+    const entries = [];
+    appVariables.forEach((value, key) => {
+        if (typeof (value) !== 'function') {
+            entries.push([key, value]);
+        }
+    });
+    let table = document.querySelector("table")
+    document.getElementById("txtDB").value = JSON.stringify({ r: table.rows.length, d: entries, v: 1 });
+}
 
+function generateElementId(typeChar, rowIndex, columnIndex) {
+    return `${typeChar}_${rowIndex}_${columnIndex}`;
+}
+
+function load() {
+    resetAppState();
+    const databaseData = JSON.parse(document.getElementById("txtDB").value);
+    window.appVariables = new Map([...window.appVariables, ...databaseData.d]);
+    let table = document.querySelector("table")
+    while (table.rows.length < databaseData.r) {
+        newRowClickHandler();
+    }
+    appVariables.forEach((value, key) => {
+        if (typeof (value) !== 'function') {
+            let element = document.getElementById(key);
+            if (element != null) {
+                switch (key[0]) {
+                    case "T":
+                        element.value = value;
+                        break;
+                    case "F"://Dont touch formulae labels
+                        break;
+                    default:
+                        console.error("Unknkown element type encountered:" + key[0]);
+                }
+            }
+            else {
+                console.error("Cannot find element:" + key);
+            }
+        }
+    });
+    window.formulaes.map(f => f());
+}
+
+function resetAppState() {
+    let table = document.querySelector("table")
+    while (table.rows.length > 0) {
+        table.deleteRow(0);
+    }
+    window.appVariables = new Map();
+    window.formulaes = [];
+    window.columnToDefMap = new Map();
+    let headerRow = table.insertRow(-1);
+    columns.forEach(generateHeaderCell.bind(headerRow));
+}
+
+resetAppState();
 newRowClickHandler();
