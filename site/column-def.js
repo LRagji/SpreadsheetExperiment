@@ -9,7 +9,8 @@ let columns = [
     },
     {
         name: "RHS",
-        type: "text"
+        type: "option",
+        options: [["One", 1], ["Two", 2], ["Three", 3]]
     },
     {
         name: "Sum",

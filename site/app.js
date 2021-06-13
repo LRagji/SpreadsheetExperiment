@@ -9,6 +9,19 @@ function generateDataCell(columnDefinition, columnIndex) {
         case "serial":
             cell.innerHTML = this.rowIndex;
             break;
+        case "option":
+            let selectList = document.createElement("select");
+            selectList.id = generateElementId("O", this.rowIndex, columnIndex);
+            cell.appendChild(selectList);
+            for (let i = 0; i < columnDefinition.options.length; i++) {
+                let option = document.createElement("option");
+                option.value = columnDefinition.options[i][1];
+                option.text = columnDefinition.options[i][0];
+                selectList.appendChild(option);
+            }
+            selectList.onchange = () => { window.appVariables.set(selectList.id, selectList.value); window.formulaes.map(f => f()); };
+            window.columnToDefMap.set(columnDefinition.name, { type: 'O', index: columnIndex });
+            break;
         case "text":
             let input = document.createElement("input");
             input.type = "text";
@@ -91,6 +104,7 @@ function load() {
             let element = document.getElementById(key);
             if (element != null) {
                 switch (key[0]) {
+                    case "O":
                     case "T":
                         element.value = value;
                         break;
